@@ -53,6 +53,7 @@ def main():
     Screenshot types:
         window
         desktop
+        snip
     '''
     #Getting arguments
     args = sys.argv
@@ -71,7 +72,7 @@ def main():
     
     
     #Do something different depending on what screenshot type it is
-    if screenshot_type == 'window':
+    if screenshot_type == 'window' or screenshot_type == 'snip':
         #Todo: This assumes focus_window exists
         focus_window = get_focus_window()
         
@@ -95,19 +96,25 @@ def main():
     else:
         raise ValueError('Invalid screenshot type')
     
-
-    #Take a screenshot
-    screenshot = pyautogui.screenshot(region=(x, y, width, height))
-
-    file_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     os.makedirs(f'{screenshots_dir}/{app_name}', exist_ok=True)
-    screenshot.save(f'{screenshots_dir}/{app_name}/{file_name}.png')
 
-    #Copy to clipboard
-    image_bytes = io.BytesIO()
-    screenshot.save(image_bytes, format='PNG')#Save to BytesIO object (in memory)
-    image_bytes.seek(0)#Move to beginning of BytesIO object
-    subprocess.run(['xclip', '-selection', 'clipboard', '-t', 'image/png', '-i'], input=image_bytes.read())#Copy to clipboard
+    
+    if screenshot_type == 'snip':
+        #Use fireshot to take a snippet
+        subprocess.run(['flameshot', 'gui', '--clipboard', '--path', f'{screenshots_dir}/{app_name}'])
+        pass
+    else:
+        #Take a screenshot
+        screenshot = pyautogui.screenshot(region=(x, y, width, height))
+
+        file_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        screenshot.save(f'{screenshots_dir}/{app_name}/{file_name}.png')
+
+        #Copy to clipboard
+        image_bytes = io.BytesIO()
+        screenshot.save(image_bytes, format='PNG')#Save to BytesIO object (in memory)
+        image_bytes.seek(0)#Move to beginning of BytesIO object
+        subprocess.run(['xclip', '-selection', 'clipboard', '-t', 'image/png', '-i'], input=image_bytes.read())#Copy to clipboard
 
 if __name__ == "__main__":
     main()
